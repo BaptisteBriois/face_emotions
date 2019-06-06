@@ -134,4 +134,3 @@ def main(imageBase64):
                   color, 0, -45, 1, 1)
 
         return base64.b64encode(imsave('pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim))
-main()
