@@ -67,11 +67,12 @@ def xdog(im, gamma=0.98, phi=200, eps=-0.1, k=1.6, sigma=0.8, binarize=False):
 #         data += b'='* (4 - missing_padding)
 #     return base64.b64decode(data, altchars)
 
-def main(imageBase64):
+def main(image):
+    imageBase64 = image
     imageBase64 += "=" * ((4 - len(imageBase64) % 4) % 4)
-    with open("pictures/original/original.png", 'wb') as f:
+    with open("./pictures/original/original.png", 'wb') as f:
         f.write(base64.b64decode(imageBase64))
-    bgr_image = cv2.imread("pictures/original/original.png")
+    bgr_image = cv2.imread("./pictures/original/original.png")
     gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
     rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
     faces = detect_faces(face_detection, gray_image)
@@ -96,8 +97,8 @@ def main(imageBase64):
         x, y, w, h = face_coordinates
         roi_color = bgr_image[y:y + h, x:x + w]
         print("[INFO] Object found. Saving locally.")
-        cv2.imwrite('pictures/face/' + str(w) + str(h) + '_faces.jpg', roi_color)
-        im = cv2.imread('pictures/face/' + str(w) + str(h) + '_faces.jpg')
+        cv2.imwrite('./pictures/face/' + str(w) + str(h) + '_faces.jpg', roi_color)
+        im = cv2.imread('./pictures/face/' + str(w) + str(h) + '_faces.jpg')
         imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
         # ret,thresh = cv2.threshold(imgray,127,255,0)
         # contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -106,7 +107,7 @@ def main(imageBase64):
         # cv2.imwrite(str(w) + str(h) + '_faces_contours.jpg', img)
         # cv2.imwrite('pictures/' + str(w) + str(h) + '_faces_grey.jpg', imgray)
         xdogim = xdog(imgray, binarize=True, k=2)
-        imsave('pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim)
+        imsave('./pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim)
 
         if len(emotion_window) > frame_window:
             emotion_window.pop(0)
@@ -133,4 +134,4 @@ def main(imageBase64):
         draw_text(face_coordinates, rgb_image, emotion_mode,
                   color, 0, -45, 1, 1)
 
-        return base64.b64encode(imsave('pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim))
+        return base64.b64encode(imsave('./pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim))
