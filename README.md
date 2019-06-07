@@ -1,7 +1,10 @@
 # API
 ## Start
+cd api
 export FLASK_APP=upload.py
 flask run --port=9000
+OR
+docker run -d -v api:/app -p 80:5000 flask
 
 # Face classification and detection.
 Real-time face detection and emotion/gender classification using fer2013/IMDB datasets with a keras CNN model and openCV.

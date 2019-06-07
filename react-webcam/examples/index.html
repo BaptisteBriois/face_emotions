@@ -8,6 +8,10 @@
       font-family: "Helvetica Neue", Helvetica, sans-serif;
       font-weight: 200;
     }
+    .container{
+      width:800px;
+margin: auto;
+    }
     textarea {
       font-family: monospace;
       font-size: inherit;
@@ -71,13 +75,23 @@
       animation: lds-spinner 1.2s linear infinite;
     }
     .lds-spinner div:after {
-      content: " ";
+      /* content: " ";
       display: block;
       position: absolute;
       top: 3px;
       left: 29px;
       width: 5px;
       height: 14px;
+      border-radius: 20%;
+      background: #555; */
+
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 18px;
+      left: 99px;
+      width: 84px;
+      height: 22px;
       border-radius: 20%;
       background: #555;
     }
@@ -211,7 +225,8 @@
         super(props);
         this.state = {
           screenshot: null,
-          tab: 0
+          tab: 0,
+          loading: false,
         };
       }
 
@@ -228,20 +243,12 @@
 
       handleClick = () => {
         const screenshot = this.webcam.getScreenshot();
-        this.setState({ screenshot });
+        this.setState({ screenshot, loading:true });
      
         console.log(screenshot, JSON.stringify({
           screenshot,
         }))
-        
-        const request = async () => {
-          const response = await fetch('https://api.com/values/1');
-          const json = await response.json();
-          console.log(json);
-      }
-      
-      request();
-      
+
         const result = fetch('http://localhost:9000', {
           method: 'POST',
           headers: {
@@ -254,8 +261,8 @@
             screenshot,
           }),
         })
-        .then(response => {
-              console.log(response)
+        .then(pytonResponse => {
+              console.log(pytonResponse)
               fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
                 method: 'POST',
                 headers: {
@@ -263,12 +270,15 @@
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  "sketch": response.sketch,
-                  "hint": reponse.hint,
+                  "sketch": pytonResponse.sketch,
+                  "hint": pytonResponse.hint,
                   "opacity": 1,
                 }),
               })
-              return response.json() //ADDED >JSON() HERE
+              .then(apiResponse => {
+                console.log(apiResponse);
+                this.setState({loading:false});
+              })
             }
         )
       }
@@ -276,7 +286,13 @@
       render() {
         return (
           <div>
-            <div className="lds-spinner-container"><div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+            {this.state.loading 
+              ?
+               <div className="lds-spinner-container"><div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+              :
+              ''
+            }
+            <div className="container">
             <h1>Face emotions</h1>
             <Webcam
               audio={false}
@@ -291,6 +307,7 @@
                 {this.state.screenshot ? <img src={this.state.screenshot} /> : null}
               </div>
             </div>
+          </div>
           </div>
         );
       }
