@@ -12,6 +12,10 @@
       width:800px;
       margin: auto;
     }
+    video, .result {
+      width: 100% !important;
+      height: auto;
+    }
     textarea {
       font-family: monospace;
       font-size: inherit;
@@ -227,6 +231,8 @@
           screenshot: null,
           tab: 0,
           loading: false,
+          error: '',
+          result: false,
         };
       }
 
@@ -249,7 +255,7 @@
           screenshot,
         }))
 
-        let resultScreenshot = this;
+        let vm = this;
         const result = fetch('http://localhost:9000', {
           method: 'POST',
           headers: {
@@ -263,11 +269,14 @@
           }),
         })
         .then(function(response) {
-        console.log(response)
+          // console.log(response)
           return response.json();
         })
         .then(function(pythonResponse) {
-          console.log(pythonResponse)
+          // console.log(pythonResponse)
+          if(pythonResponse.status !== 200){
+            vm.setState({error: 'Face not recognize'})
+          }
           fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
             method: 'POST',
             headers: {
@@ -286,12 +295,10 @@
           })
           .then(apiResult => {
             console.log(apiResult.colored)
-            resultScreenshot.setState({screenshot:apiResult.colored})
+            vm.setState({screenshot:apiResult.colored, loading:false, result: apiResult.colored})
           }),
           error => console.log(error)
         })
-        this.setState({loading:false});
-
       }
 
       render() {
@@ -304,21 +311,35 @@
               ''
             }
             <div className="container">
-            <h1>Face emotions</h1>
-            <Webcam
-              audio={false}
-              ref={node => this.webcam = node}
-            />
-            <div>
+            <h1>Draw Face emotions</h1>
+            {!this.state.result
+              ?
+                <Webcam
+                  audio={false}
+                  ref={node => this.webcam = node}
+                />
+              :
+                <img className="result" src={this.state.result}/>
+            }
+            
+            {/*
+              <div>
               <h2>Screenshots</h2>
               <div className='screenshots'>
                 <div className='controls'>
                   <button onClick={this.handleClick}>capture</button>
                 </div>
                 {this.state.screenshot ? <img src={this.state.screenshot} /> : null}
-              </div>
-            </div>
+              </div> 
+            </div> */}
+            {this.state.error
+              ?
+               <div className="error">{this.state.error}</div>
+              :
+              ''
+              }
           </div>
+
           </div>
         );
       }
