@@ -19,6 +19,7 @@ from skimage.color import rgb2gray
 from scipy.ndimage.filters import gaussian_filter
 from skimage.filters import threshold_otsu
 from skimage.io import imsave
+from PIL import Image
 
 # parameters for loading data and images
 detection_model_path = 'trained_models/detection_models/haarcascade_frontalface_default.xml'
@@ -103,21 +104,33 @@ def main(image):
         x, y, w, h = face_coordinates
         roi_color = bgr_image[y:y + h, x:x + w]
         c = roi_color.shape[2]
-        n = 10
-        xs = np.random.randint(w, size=n)
-        ys = np.random.randint(h, size=n)
-        print xs
-        print ys
+        # n = 10
+        # xs = np.random.randint(w, size=n)
+        # ys = np.random.randint(h, size=n)
+        xs = [w/5, w*3/5, w*3/5, w/2, w*9/10]
+        ys = [h/2, h/4, h*3/4, h/2, h/2]
 
         hint = np.zeros((w, h, 4), dtype=np.uint8)
 
-        for i in range(0, n):
-            print xs[i]
-            print ys[i]
-            hint[xs[i], ys[i], :3] = roi_color[xs[i], ys[i], :3]
-            hint[xs[i], ys[i], 3] = 255
-        print roi_color
-        print hint
+        for i in range(0, 5):
+            x, y = xs[i], ys[i]
+            hint[
+                [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
+                [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
+                :3
+            ] = roi_color[
+                    [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
+                    [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
+                    :3
+                ]
+            hint[
+                [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
+                [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
+                3
+            ] = 255
+
+        Image.fromarray(hint).show()
+
         cv2.imwrite('pictures/hint/' + ts + '_hint.png', hint)
 
         print("[INFO] Object found. Saving locally.")
