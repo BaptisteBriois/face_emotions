@@ -107,38 +107,13 @@ def main(image):
         # n = 10
         # xs = np.random.randint(w, size=n)
         # ys = np.random.randint(h, size=n)
-        xs = [w/5, w*3/5, w*3/5, w/2, w*9/10]
-        ys = [h/2, h/4, h*3/4, h/2, h/2]
-
-        hint = np.zeros((w, h, 4), dtype=np.uint8)
-
-        for i in range(0, 5):
-            x, y = xs[i], ys[i]
-            hint[
-                [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
-                [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
-                :3
-            ] = roi_color[
-                    [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
-                    [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
-                    :3
-                ]
-            hint[
-                [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
-                [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
-                3
-            ] = 255
-
-        Image.fromarray(hint).show()
-
-        cv2.imwrite('pictures/hint/' + ts + '_hint.png', hint)
 
         print("[INFO] Object found. Saving locally.")
         cv2.imwrite('pictures/face/' + ts + '_faces.png', roi_color)
         im = cv2.imread('pictures/face/' + ts + '_faces.png')
         imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
 
-        xdogim = xdog(imgray, gamma=0.98, phi=230, eps=-0.1, k=1.6, sigma=1, binarize=True)
+        xdogim = xdog(imgray, gamma=0.95, phi=230, eps=-0.1, k=1.6, sigma=1, binarize=True)
         encoded_xdog = xdogim
         imsave('pictures/contour/' + ts + '_faces_grey.png', xdogim)
 
@@ -150,27 +125,43 @@ def main(image):
             continue
 
         if emotion_text == 'angry':
-            color = emotion_probability * np.asarray((255, 0, 0))
+            face_color = [0, 0, 255]
         elif emotion_text == 'sad':
-            color = emotion_probability * np.asarray((0, 0, 255))
+            face_color = [255, 0, 0]
         elif emotion_text == 'happy':
-            color = emotion_probability * np.asarray((255, 255, 0))
+            face_color = [0, 255, 255]
         elif emotion_text == 'surprise':
-            color = emotion_probability * np.asarray((0, 255, 255))
+            face_color = [0, 140, 255]
         else:
-            color = emotion_probability * np.asarray((0, 255, 0))
+            face_color = [0, 255, 0]
 
-        color = color.astype(int)
-        color = color.tolist()
+        xs = [w/5, w/5, w/5, w*3/5, w*3/5, w/2, w*9/10, w*9/10]
+        ys = [h/3, h*2/3, h/2, h/4, h*3/4, h/2, h*2/5, h*3/5]
 
-        draw_bounding_box(face_coordinates, rgb_image, color)
-        draw_text(face_coordinates, rgb_image, emotion_mode,
-                  color, 0, -45, 1, 1)
+        hint = np.zeros((w, h, 4), dtype=np.uint8)
+
+        for i in range(0, 8):
+            x, y = xs[i], ys[i]
+            hint[
+                [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
+                [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
+                :3
+            ] = face_color
+
+            hint[
+                [x + _x for _x in list(range(3)) * 3 if (x + _x) > -1 and (x + _x) < w],
+                [y + _y for _y in (0, ) * 3 + (1, ) * 3 + (2, ) * 3 if (y + _y) > -1 and (y + _y) < h],
+                3
+            ] = 255
+
+        cv2.imwrite('pictures/hint/' + ts + '_hint.png', hint)
 
         with open("pictures/contour/" + ts + "_faces_grey.png", 'rb') as f:
             xdogContour = f.read()
 
         with open("pictures/hint/" + ts + "_hint.png", 'rb') as f:
             hintread = f.read()
+
+        
 
         return {'sketch': base64.b64encode(xdogContour), 'hint': base64.b64encode(hintread)}
