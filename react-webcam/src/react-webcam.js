@@ -78,7 +78,7 @@ export default class Webcam extends Component {
     imageSmoothing: true,
     onUserMedia: () => {},
     onUserMediaError: () => {},
-    screenshotFormat: 'image/webp',
+    screenshotFormat: 'image/png',
     width: 640,
     screenshotQuality: 0.92,
   };
