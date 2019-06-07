@@ -10,7 +10,7 @@
     }
     .container{
       width:800px;
-margin: auto;
+      margin: auto;
     }
     textarea {
       font-family: monospace;
@@ -155,69 +155,69 @@ margin: auto;
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@15.5.4/dist/react.js"></script>
-  <script src="https://unpkg.com/react-dom@15.5.4/dist/react-dom.js"></script>
-  <script src="https://unpkg.com/prop-types@15.6.1/prop-types.js"></script>
-  <script src="https://unpkg.com/babel-transform-in-browser@6.4.6/dist/btib.min.js"></script>
-  <script src="../dist/react-webcam.js"></script>
-  <!-- <script type="text/es2015">
-    // getUserMedia only works for secure pages
+<div id="root"></div>
+<script src="https://unpkg.com/react@15.5.4/dist/react.js"></script>
+<script src="https://unpkg.com/react-dom@15.5.4/dist/react-dom.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.1/prop-types.js"></script>
+<script src="https://unpkg.com/babel-transform-in-browser@6.4.6/dist/btib.min.js"></script>
+<script src="../dist/react-webcam.js"></script>
+<!-- <script type="text/es2015">
+  // getUserMedia only works for secure pages
 
-    class App extends React.Component {
-      constructor(props) {
-        super(props);
-        this.state = {
-          screenshot: null,
-          tab: 0
-        };
-      }
-
-      handleClick = () => {
-        const screenshot = this.webcam.getScreenshot();
-        const encodedString = new Buffer('your string here').toString('base64');
-
-        this.setState({ screenshot });
-
-        fetch('http://localhost:9000', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            picture: 'yourValue',
-            secondParam: 'yourOtherValue',
-          })
-        })
-
-      }
-
-      render() {
-        return (
-          <div>
-            <h1>Face emotions</h1>
-            <Webcam
-              audio={false}
-              ref={node => this.webcam = node}
-            />
-            <div>
-              <h2>Screenshots</h2>
-              <div className='screenshots'>
-                <div className='controls'>
-                  <button onClick={this.handleClick}>capture</button>
-                </div>
-                {this.state.screenshot ? <img src={this.state.screenshot} /> : null}
-              </div>
-            </div>
-          </div>
-        );
-      }
+  class App extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        screenshot: null,
+        tab: 0
+      };
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
-  </script> -->
-  <script type="text/es2015">
+    handleClick = () => {
+      const screenshot = this.webcam.getScreenshot();
+      const encodedString = new Buffer('your string here').toString('base64');
+
+      this.setState({ screenshot });
+
+      fetch('http://localhost:9000', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          picture: 'yourValue',
+          secondParam: 'yourOtherValue',
+        })
+      })
+
+    }
+
+    render() {
+      return (
+        <div>
+          <h1>Face emotions</h1>
+          <Webcam
+            audio={false}
+            ref={node => this.webcam = node}
+          />
+          <div>
+            <h2>Screenshots</h2>
+            <div className='screenshots'>
+              <div className='controls'>
+                <button onClick={this.handleClick}>capture</button>
+              </div>
+              {this.state.screenshot ? <img src={this.state.screenshot} /> : null}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(<App />, document.getElementById('root'));
+</script> -->
+<script type="text/es2015">
     // getUserMedia only works for secure pages
 
     class App extends React.Component {
@@ -244,11 +244,12 @@ margin: auto;
       handleClick = () => {
         const screenshot = this.webcam.getScreenshot();
         this.setState({ screenshot, loading:true });
-     
+
         console.log(screenshot, JSON.stringify({
           screenshot,
         }))
 
+        let resultScreenshot = this;
         const result = fetch('http://localhost:9000', {
           method: 'POST',
           headers: {
@@ -266,29 +267,29 @@ margin: auto;
           return response.json();
         })
         .then(function(pythonResponse) {
-          console.log(JSON.stringify(pythonResponse));
-              console.log(pythonResponse)
-              fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
-                method: 'POST',
-                headers: {
-                  Accept: 'application/json',
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  "sketch": pythonResponse.body.sketch,
-                  "hint": pythonResponse.body.hint,
-                  "opacity": 1.0,
-                }),
-              })
-              .then(apiResponse => {
-                return apiResponse.json()
-              })
-              .then(apiResult => {
-                console.log(apiResult)
-              })
+          console.log(pythonResponse)
+          fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
             },
-            error => console.log(error)
-        )
+            body: JSON.stringify({
+              "sketch": pythonResponse.body.sketch,
+              "hint": pythonResponse.body.hint,
+              "opacity": 1.0,
+            }),
+          })
+          .then(apiResponse => {
+            console.log(apiResponse)
+            return apiResponse.json()
+          })
+          .then(apiResult => {
+            console.log(apiResult.colored)
+            resultScreenshot.setState({screenshot:apiResult.colored})
+          }),
+          error => console.log(error)
+        })
         this.setState({loading:false});
 
       }
@@ -296,7 +297,7 @@ margin: auto;
       render() {
         return (
           <div>
-            {this.state.loading 
+            {this.state.loading
               ?
                <div className="lds-spinner-container"><div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
               :

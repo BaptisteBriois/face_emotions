@@ -19,7 +19,6 @@ def index():
         json_data = request.get_json(force=True)
         imagefile = json_data['screenshot']
         data = main(imagefile)
-        print (data)
         return Response(json.dumps({'body': main(imagefile)}), status=200, mimetype='application/json')
 
 app.run(port=9000)
