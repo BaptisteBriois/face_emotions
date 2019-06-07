@@ -7,8 +7,10 @@
     body {
       font-family: "Helvetica Neue", Helvetica, sans-serif;
       font-weight: 200;
-      margin: 0 auto 50px;
-      width: 750px;
+    }
+    .container{
+      width:800px;
+margin: auto;
     }
     textarea {
       font-family: monospace;
@@ -54,6 +56,102 @@
       -webkit-filter: blur(1px);
       filter: blur(1px);
     }
+    .lds-spinner-container{
+      text-align:center;
+      margin:auto;
+      margin-top:20%;
+      width:100%;
+      position:absolute;
+    }
+    .lds-spinner {
+      color: official;
+      display: inline-block;
+      position: relative;
+      width: 64px;
+      height: 64px;
+    }
+    .lds-spinner div {
+      transform-origin: 32px 32px;
+      animation: lds-spinner 1.2s linear infinite;
+    }
+    .lds-spinner div:after {
+      /* content: " ";
+      display: block;
+      position: absolute;
+      top: 3px;
+      left: 29px;
+      width: 5px;
+      height: 14px;
+      border-radius: 20%;
+      background: #555; */
+
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 18px;
+      left: 99px;
+      width: 84px;
+      height: 22px;
+      border-radius: 20%;
+      background: #555;
+    }
+    .lds-spinner div:nth-child(1) {
+      transform: rotate(0deg);
+      animation-delay: -1.1s;
+    }
+    .lds-spinner div:nth-child(2) {
+      transform: rotate(30deg);
+      animation-delay: -1s;
+    }
+    .lds-spinner div:nth-child(3) {
+      transform: rotate(60deg);
+      animation-delay: -0.9s;
+    }
+    .lds-spinner div:nth-child(4) {
+      transform: rotate(90deg);
+      animation-delay: -0.8s;
+    }
+    .lds-spinner div:nth-child(5) {
+      transform: rotate(120deg);
+      animation-delay: -0.7s;
+    }
+    .lds-spinner div:nth-child(6) {
+      transform: rotate(150deg);
+      animation-delay: -0.6s;
+    }
+    .lds-spinner div:nth-child(7) {
+      transform: rotate(180deg);
+      animation-delay: -0.5s;
+    }
+    .lds-spinner div:nth-child(8) {
+      transform: rotate(210deg);
+      animation-delay: -0.4s;
+    }
+    .lds-spinner div:nth-child(9) {
+      transform: rotate(240deg);
+      animation-delay: -0.3s;
+    }
+    .lds-spinner div:nth-child(10) {
+      transform: rotate(270deg);
+      animation-delay: -0.2s;
+    }
+    .lds-spinner div:nth-child(11) {
+      transform: rotate(300deg);
+      animation-delay: -0.1s;
+    }
+    .lds-spinner div:nth-child(12) {
+      transform: rotate(330deg);
+      animation-delay: 0s;
+    }
+    @keyframes lds-spinner {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -127,7 +225,8 @@
         super(props);
         this.state = {
           screenshot: null,
-          tab: 0
+          tab: 0,
+          loading: false,
         };
       }
 
@@ -144,24 +243,26 @@
 
       handleClick = () => {
         const screenshot = this.webcam.getScreenshot();
-        this.setState({ screenshot });
+        this.setState({ screenshot, loading:true });
      
         console.log(screenshot, JSON.stringify({
           screenshot,
         }))
-        
+
         const result = fetch('http://localhost:9000', {
           method: 'POST',
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
           },
+          mode: 'cors',
+          cache: 'default',
           body: JSON.stringify({
             screenshot,
           }),
         })
-        .then(response => {
-              console.log(response)
+        .then(pytonResponse => {
+              console.log(pytonResponse)
               fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
                 method: 'POST',
                 headers: {
@@ -169,12 +270,15 @@
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  "sketch": response.sketch,
-                  "hint": reponse.hint,
+                  "sketch": pytonResponse.sketch,
+                  "hint": pytonResponse.hint,
                   "opacity": 1,
                 }),
               })
-              return response.json() //ADDED >JSON() HERE
+              .then(apiResponse => {
+                console.log(apiResponse);
+                this.setState({loading:false});
+              })
             }
         )
       }
@@ -182,6 +286,13 @@
       render() {
         return (
           <div>
+            {this.state.loading 
+              ?
+               <div className="lds-spinner-container"><div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+              :
+              ''
+            }
+            <div className="container">
             <h1>Face emotions</h1>
             <Webcam
               audio={false}
@@ -196,6 +307,7 @@
                 {this.state.screenshot ? <img src={this.state.screenshot} /> : null}
               </div>
             </div>
+          </div>
           </div>
         );
       }

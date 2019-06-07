@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 /* eslint-disable react/button-has-type */
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
@@ -29,24 +30,52 @@ class App extends React.Component {
 
  handleClick = () => {
    const screenshot = this.webcam.getScreenshot();
-   let encodedScreenshot = '';
-   this.getBase64(screenshot, (result) => {
-     encodedScreenshot = result;
-   });
-
    this.setState({ screenshot });
+   this.request(screenshot);
+  }
 
-   fetch('http://localhost:9000', {
-     method: 'POST',
-     headers: {
-       Accept: 'application/json',
-       'Content-Type': 'application/json',
-     },
-     body: JSON.stringify({
-       encodedScreenshot,
-     }),
-   });
- }
+  //  fetch('http://localhost:9000', {
+  //    method: 'POST',
+  //    headers: {
+  //      Accept: 'application/json',
+  //      'Content-Type': 'application/json',
+  //    },
+  //    body: JSON.stringify({
+  //      encodedScreenshot,
+  //    }),
+  //  });
+  request = async (screenshot) => {
+    const pythonResponse = await fetch('http://localhost:9000', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors',
+      cache: 'default',
+      body: JSON.stringify({
+        screenshot,
+      }),
+    });
+    const pythonJson = await pythonResponse.json();
+    console.log(pythonJson);
+
+    const apiResponse = await fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sketch: pythonJson.sketch,
+            hint: pythonJson.hint,
+            opacity: 1,
+          }),
+        });
+
+    const apiJson = await apiResponse.json();
+    console.log(apiJson);
+}
 
  render() {
    return (

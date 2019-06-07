@@ -7,3 +7,5 @@ src/train_emotion_classifier_transfer_learning.py
 src/pictures
 .idea
 pictures
+api/flask
+*node_modules*
