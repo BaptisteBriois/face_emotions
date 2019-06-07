@@ -69,10 +69,10 @@ def xdog(im, gamma=0.98, phi=200, eps=-0.1, k=1.6, sigma=0.8, binarize=False):
 
 def main(image):
     imageBase64 = image
-    imageBase64 += "=" * ((4 - len(imageBase64) % 4) % 4)
-    with open("./pictures/original/original.png", 'wb') as f:
-        f.write(base64.b64decode(imageBase64))
-    bgr_image = cv2.imread("./pictures/original/original.png")
+    encoded_data = imageBase64.split(',')[1]  # Just get index with base64  image data // Caution in react you have three option of picture forrmat.
+    with open("./pictures/original/original1.png", 'wb') as f:
+        f.write(base64.b64decode(encoded_data))
+    bgr_image = cv2.imread("./pictures/original/original1.png")
     gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
     rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
     faces = detect_faces(face_detection, gray_image)
