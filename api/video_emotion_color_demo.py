@@ -125,7 +125,7 @@ def main(image):
         im = cv2.imread('pictures/face/' + ts + '_faces.png')
         imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
 
-        xdogim = xdog(imgray, gamma=0.98, phi=230, eps=-0.1, k=1.6, sigma=1.5, binarize=True)
+        xdogim = xdog(imgray, gamma=0.98, phi=230, eps=-0.1, k=1.6, sigma=1, binarize=True)
         imsave('pictures/contour/' + ts + '_faces_grey.png', xdogim)
 
         if len(emotion_window) > frame_window:
@@ -152,4 +152,5 @@ def main(image):
         draw_bounding_box(face_coordinates, rgb_image, color)
         draw_text(face_coordinates, rgb_image, emotion_mode,
                   color, 0, -45, 1, 1)
-        return {sketch: base64.b64encode(xdogim), hint: base64.b64encode(hint)}
+
+        return {'sketch': base64.b64encode(xdogim), 'hint': base64.b64encode(hint)}
