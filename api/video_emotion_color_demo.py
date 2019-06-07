@@ -3,6 +3,7 @@ from statistics import mode
 import cv2
 import sys
 import base64
+import time
 from keras.models import load_model
 import numpy as np
 
@@ -20,8 +21,8 @@ from skimage.filters import threshold_otsu
 from skimage.io import imsave
 
 # parameters for loading data and images
-detection_model_path = '../trained_models/detection_models/haarcascade_frontalface_default.xml'
-emotion_model_path = '../trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5'
+detection_model_path = 'trained_models/detection_models/haarcascade_frontalface_default.xml'
+emotion_model_path = 'trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5'
 emotion_labels = get_labels('fer2013')
 
 # hyper-parameters for bounding boxes shape
@@ -38,7 +39,7 @@ emotion_target_size = emotion_classifier.input_shape[1:3]
 # starting lists for calculating modes
 emotion_window = []
 
-def xdog(im, gamma=0.98, phi=200, eps=-0.1, k=1.6, sigma=0.8, binarize=False):
+def xdog(im, gamma=0.99, phi=200, eps=-0.1, k=1.6, sigma=0.8, binarize=False):
     # Source : https://github.com/CemalUnal/XDoG-Filter
     # Reference : XDoG: An eXtended difference-of-Gaussians compendium including advanced image stylization
     # Link : http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.365.151&rep=rep1&type=pdf
@@ -54,21 +55,10 @@ def xdog(im, gamma=0.98, phi=200, eps=-0.1, k=1.6, sigma=0.8, binarize=False):
     imdiff = imdiff.astype('float32')
     return imdiff
 
-# def decode_base64(data, altchars=b'+/'):
-#     """Decode base64, padding being optional.
-
-#     :param data: Base64 data as an ASCII byte string
-#     :returns: The decoded byte string.
-
-#     """
-#     data = re.sub(rb'[^a-zA-Z0-9%s]' % altchars, b'', data)  # normalize
-#     missing_padding = len(data) % 4
-#     if missing_padding:
-#         data += b'='* (4 - missing_padding)
-#     return base64.b64decode(data, altchars)
-
-def main(imageBase64):
-    imageBase64 += "=" * ((4 - len(imageBase64) % 4) % 4)
+def main(image):
+    encoded_data = image
+    imageBase64 = encoded_data.split(',')[1]  # Just get index with base64  image data // Caution in react you have three option of picture forrmat
+    # imageBase64 += "=" * ((4 - len(imageBase64) % 4) % 4)
     with open("pictures/original/original.png", 'wb') as f:
         f.write(base64.b64decode(imageBase64))
     bgr_image = cv2.imread("pictures/original/original.png")
@@ -77,6 +67,7 @@ def main(imageBase64):
     faces = detect_faces(face_detection, gray_image)
 
     for face_coordinates in faces:
+        ts = str(time.time())
         x1, x2, y1, y2 = apply_offsets(face_coordinates, emotion_offsets)
         gray_face = gray_image[y1:y2, x1:x2]
         try:
@@ -93,20 +84,49 @@ def main(imageBase64):
         emotion_text = emotion_labels[emotion_label_arg]
         emotion_window.append(emotion_text)
 
+        """
+            img = np.array()
+            img.shape -> (w, h, c)
+
+            n = 10
+            xs = np.random.randint(0, w, n)
+            ys = ---------------------h----
+
+            HINT = np.zeros((w, h, 4), dtype=np.uint8)
+
+            for pixels:
+                HINT[xi, yi, :3] = img[xi, yi, :3]
+                HINT[xi, yi, 3]  = 255
+
+        """
+
         x, y, w, h = face_coordinates
         roi_color = bgr_image[y:y + h, x:x + w]
+        c = roi_color.shape[2]
+        n = 10
+        xs = np.random.randint(w, size=n)
+        ys = np.random.randint(h, size=n)
+        print xs
+        print ys
+
+        hint = np.zeros((w, h, 4), dtype=np.uint8)
+
+        for i in range(0, n):
+            print xs[i]
+            print ys[i]
+            hint[xs[i], ys[i], :3] = roi_color[xs[i], ys[i], :3]
+            hint[xs[i], ys[i], 3] = 255
+        print roi_color
+        print hint
+        cv2.imwrite('pictures/hint/' + ts + '_hint.png', hint)
+
         print("[INFO] Object found. Saving locally.")
-        cv2.imwrite('pictures/face/' + str(w) + str(h) + '_faces.jpg', roi_color)
-        im = cv2.imread('pictures/face/' + str(w) + str(h) + '_faces.jpg')
+        cv2.imwrite('pictures/face/' + ts + '_faces.png', roi_color)
+        im = cv2.imread('pictures/face/' + ts + '_faces.png')
         imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
-        # ret,thresh = cv2.threshold(imgray,127,255,0)
-        # contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-        # img = cv2.drawContours(imgray, contours, -1, (255,255,255), 7)
-        # img = (255 - img)
-        # cv2.imwrite(str(w) + str(h) + '_faces_contours.jpg', img)
-        # cv2.imwrite('pictures/' + str(w) + str(h) + '_faces_grey.jpg', imgray)
-        xdogim = xdog(imgray, binarize=True, k=2)
-        imsave('pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim)
+
+        xdogim = xdog(imgray, gamma=0.98, phi=230, eps=-0.1, k=1.6, sigma=1, binarize=True)
+        imsave('pictures/contour/' + ts + '_faces_grey.png', xdogim)
 
         if len(emotion_window) > frame_window:
             emotion_window.pop(0)
@@ -133,5 +153,4 @@ def main(imageBase64):
         draw_text(face_coordinates, rgb_image, emotion_mode,
                   color, 0, -45, 1, 1)
 
-        return base64.b64encode(imsave('pictures/contour/' + str(w) + str(h) + '_faces_grey.jpg', xdogim))
-main()
+        return {'sketch': base64.b64encode(xdogim), 'hint': base64.b64encode(hint)}
