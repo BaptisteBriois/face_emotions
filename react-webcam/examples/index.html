@@ -261,8 +261,13 @@ margin: auto;
             screenshot,
           }),
         })
-        .then(pytonResponse => {
-              console.log(pytonResponse)
+        .then(function(response) {
+        console.log(response)
+          return response.json();
+        })
+        .then(function(pythonResponse) {
+          console.log(JSON.stringify(pythonResponse));
+              console.log(pythonResponse)
               fetch('https://dvic.devinci.fr/dgx/paints_torch/api/v1/colorizer', {
                 method: 'POST',
                 headers: {
@@ -270,17 +275,22 @@ margin: auto;
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  "sketch": pytonResponse.sketch,
-                  "hint": pytonResponse.hint,
-                  "opacity": 1,
+                  "sketch": pythonResponse.body.sketch,
+                  "hint": pythonResponse.body.hint,
+                  "opacity": 1.0,
                 }),
               })
               .then(apiResponse => {
-                console.log(apiResponse);
-                this.setState({loading:false});
+                return apiResponse.json()
               })
-            }
+              .then(apiResult => {
+                console.log(apiResult)
+              })
+            },
+            error => console.log(error)
         )
+        this.setState({loading:false});
+
       }
 
       render() {
